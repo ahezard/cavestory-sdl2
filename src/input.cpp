@@ -14,27 +14,27 @@ void Input::beginNewFrame()
 
 void Input::keyDownEvent(const SDL_Event& event)
 {
-    pressed_keys_[event.key.keysym.scancode] = true;
-    held_keys_[event.key.keysym.scancode] = true;
+    pressed_keys_[event.jbutton.button] = true;
+    held_keys_[event.jbutton.button] = true;
 }
 
 void Input::keyUpEvent(const SDL_Event& event)
 {
-    released_keys_[event.key.keysym.scancode] = true;
-    held_keys_[event.key.keysym.scancode] = false;
+    released_keys_[event.jbutton.button] = true;
+    held_keys_[event.jbutton.button] = false;
 }
 
-bool Input::wasKeyPressed(SDL_Scancode key)
+bool Input::wasKeyPressed(int key)
 {
     return pressed_keys_[key];
 }
 
-bool Input::wasKeyReleased(SDL_Scancode key)
+bool Input::wasKeyReleased(int key)
 {
     return released_keys_[key];
 }
 
-bool Input::isKeyHeld(SDL_Scancode key)
+bool Input::isKeyHeld(int key)
 {
     return held_keys_[key];
 }
