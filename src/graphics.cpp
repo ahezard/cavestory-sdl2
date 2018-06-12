@@ -7,15 +7,15 @@
 Graphics::Graphics() :
     sdlWindow {SDL_CreateWindow(
                 "Cave Reconstructed",
-                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                units::tileToPixel(Game::kScreenWidth),
-                units::tileToPixel(Game::kScreenHeight),
-                SDL_WINDOW_RESIZABLE
+                0, 0,
+                1280,
+                720,
+                SDL_WINDOW_FULLSCREEN
                 )},
     sdlRenderer {SDL_CreateRenderer(
             sdlWindow,
             -1,
-            SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE)},
+            SDL_RENDERER_SOFTWARE | SDL_RENDERER_TARGETTEXTURE)},
     sprite_sheets_()
 {
     if (sdlWindow == nullptr) {
