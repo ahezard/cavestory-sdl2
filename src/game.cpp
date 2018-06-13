@@ -14,6 +14,16 @@ const auto kMaxFrameTime = std::chrono::milliseconds{5 * 1000 / 60};
 units::Tile Game::kScreenWidth{20};
 units::Tile Game::kScreenHeight{15};
 
+#define BUTTON_DPAD_UP 13
+#define BUTTON_DPAD_DOWN 15
+#define BUTTON_DPAD_LEFT 12
+#define BUTTON_DPAD_RIGHT 14
+#define BUTTON_PLUS 10
+#define BUTTON_A 0
+#define BUTTON_B 1
+#define BUTTON_X 2
+#define BUTTON_Y 3
+
 Game::Game() :
     sdlEngine_(),
     graphics_(),
@@ -33,6 +43,17 @@ Game::Game() :
     particle_system_{},
     damage_texts_()
 {
+    // open CONTROLLER_PLAYER_1 and CONTROLLER_PLAYER_2
+    // when connected, both joycons are mapped to joystick #0,
+    // else joycons are individually mapped to joystick #0, joystick #1, ...
+    // https://github.com/devkitPro/SDL/blob/switch-sdl2/src/joystick/switch/SDL_sysjoystick.c#L45
+    for (int i = 0; i < 2; i++) {
+        if (SDL_JoystickOpen(i) == NULL) {
+            printf("SDL_JoystickOpen: %s\n", SDL_GetError());
+            SDL_Quit();
+        }
+    }
+    
     runEventLoop();
 }
 
@@ -59,10 +80,10 @@ void Game::runEventLoop() {
         input.beginNewFrame();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-            case SDL_KEYDOWN:
+            case SDL_JOYBUTTONDOWN:
                 input.keyDownEvent(event);
                 break;
-            case SDL_KEYUP:
+            case SDL_JOYBUTTONUP:
                 input.keyUpEvent(event);
                 break;
             case SDL_QUIT:
@@ -72,44 +93,44 @@ void Game::runEventLoop() {
                 break;
             }
         }
-        if (input.wasKeyPressed(SDL_SCANCODE_Q)) {
+        if (input.wasKeyPressed(BUTTON_PLUS)) {
             running = false;
         }
 
         // Player Horizontal Movement
-        if (input.isKeyHeld(SDL_SCANCODE_LEFT)
-                && input.isKeyHeld(SDL_SCANCODE_RIGHT)) {
+        if (input.isKeyHeld(BUTTON_DPAD_LEFT)
+                && input.isKeyHeld(BUTTON_DPAD_RIGHT)) {
             // if both left and right are being pressed we need to stop moving
             player_->stopMoving();
-        } else if (input.isKeyHeld(SDL_SCANCODE_LEFT)) {
+        } else if (input.isKeyHeld(BUTTON_DPAD_LEFT)) {
             player_->startMovingLeft();
-        } else if (input.isKeyHeld(SDL_SCANCODE_RIGHT)) {
+        } else if (input.isKeyHeld(BUTTON_DPAD_RIGHT)) {
             player_->startMovingRight();
         } else {
             player_->stopMoving();
         }
 
-        if (input.isKeyHeld(SDL_SCANCODE_UP) &&
-                input.isKeyHeld(SDL_SCANCODE_DOWN)) {
+        if (input.isKeyHeld(BUTTON_DPAD_UP) &&
+                input.isKeyHeld(BUTTON_DPAD_DOWN)) {
             player_->lookHorizontal();
-        } else if (input.isKeyHeld(SDL_SCANCODE_UP)) {
+        } else if (input.isKeyHeld(BUTTON_DPAD_UP)) {
             player_->lookUp();
-        } else if (input.isKeyHeld(SDL_SCANCODE_DOWN)) {
+        } else if (input.isKeyHeld(BUTTON_DPAD_DOWN)) {
             player_->lookDown();
         } else {
             player_->lookHorizontal();
         }
 
         // Player Jump
-        if (input.wasKeyPressed(SDL_SCANCODE_Z)) {
+        if (input.wasKeyPressed(BUTTON_A)) {
             player_->startJump();
-        } else if (input.wasKeyReleased(SDL_SCANCODE_Z)) {
+        } else if (input.wasKeyReleased(BUTTON_A)) {
             player_->stopJump();
         }
         // Player Fire
-        if (input.wasKeyPressed(SDL_SCANCODE_X)) {
+        if (input.wasKeyPressed(BUTTON_B)) {
             player_->startFire();
-        } else if (input.wasKeyReleased(SDL_SCANCODE_X)) {
+        } else if (input.wasKeyReleased(BUTTON_B)) {
             player_->stopFire();
         }
 
@@ -117,9 +138,8 @@ void Game::runEventLoop() {
         const auto current_time = high_resolution_clock::now();
         const auto upd_elapsed_time = current_time - last_updated_time;
 
-        update(std::min(
-                    duration_cast<milliseconds>(upd_elapsed_time),
-                    kMaxFrameTime),
+        update(
+                    std::chrono::milliseconds{ 1000 / 60},
                graphics_
               );
         last_updated_time = current_time;
